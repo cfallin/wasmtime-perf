@@ -17,7 +17,6 @@ HASH=$1
 OUT=$ROOT/data/out.$HASH
 DIR=`mktemp -d`
 
-rm -rf $OUT
 OUT=`readlink -f $OUT`
 mkdir -p $OUT
 
@@ -33,6 +32,12 @@ echo "Checked out in `pwd`..."
 cargo build -p cranelift-tools --release && cargo build --release
 
 for bench in $BENCHES; do
+  if [ -f $OUT/complete.$bench ]; then
+    continue
+  fi
+  rm -f $OUT/compile.$bench.*
+  rm -f $OUT/compile-run.$bench.*
+
   for i in `seq 0 9`; do
     echo "Run $i: $bench: compile time"
     RAYON_NUM_THREADS=1 perf stat target/release/clif-util wasm --set opt_level=speed --set enable_verifier=false --target aarch64 $ROOT/$bench.wasm 2>$OUT/compile.$bench.$i.txt
@@ -42,6 +47,8 @@ for bench in $BENCHES; do
     echo "Run $i: $bench: compile time + runtime "
     RAYON_NUM_THREADS=1 perf stat target/release/wasmtime run --disable-cache $ROOT/$bench.wasm 2>$OUT/compile-run.$bench.$i.txt
   done
+
+  touch $OUT/complete.$bench
 done
 
 echo "Results in $OUT"

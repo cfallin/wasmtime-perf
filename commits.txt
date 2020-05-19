@@ -1,0 +1,15 @@
+7da6101732745b43bdb528c53d9a60d1e4d354a7 Initial AArch64 support
+b691770faad4ae1696b1350681b90b02722d434f SourceLocs in MachInst
+767bcaab29be907235e21803c71144bbbc22c1b8 regalloc.rs to 0.0.20, fix is_move
+be6f060abf1975a8fb9e70adee371c2b8c8b0222 dense vreg->rreg maps
+e39b4aba1c006e23af3a233cbe85e308d5806e66 Arm64Call reloc: don't use for non-colocated calls
+a66724aafd0e1720af52bb3c7a34763eac8045c4 new AArch64 stack frame impl (positive offsets)
+48521393ae6b6e014902fac8fe70ac2c1b221880 bump to regalloc.rs 0.0.22
+4f919c64602169fef9481fa5d1188befbbe327ed bump to regalloc.rs 0.0.23; slice for block_succs
+528d3c135594e59197a8d38acd201d13f5762084 Ben's machinst memory opts
+0bc0503f3f6c6cfe8dfc7c46e185db26f8ac494f Julian's phi-removal pass
+ee2f861fdda3903588573b9dbbf658eec2a949bd avoid duplicate RRU allocs
+94190d57244b26baf36629c88104b0ba516510cf tune CLIF parser: use SmallVec
+07c55fa50f214258817ec924a79404370a8321c8 suggest a scratch register that's not caller-saved
+df4028749e53d0da258a5e6c5d3779414440130b reduce Inst size (Joey's patch)
+d8d6fbe58c41e33477fd21df954ab87d864c16c0 isel refactor / MachBuffer / block ordering
