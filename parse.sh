@@ -9,6 +9,10 @@ fi
 get_stat() {
   file=$1
   stat=$2
+  if [ ! -f $file ]; then
+    echo "FAIL"
+    return
+  fi
   if ! grep -q $stat $file; then
     echo "FAIL"
     return
