@@ -3,12 +3,13 @@ set -e
 
 
 # -- config
-REPO=https://github.com/bytecodealliance/wasmtime
+REPO=https://github.com/cfallin/wasmtime
 BENCHES="regex-rs bz2"
 # --
 
 if [ $# -lt 1 ]; then
   echo "Usage: run.sh HASH"
+  exit 1
 fi
 
 ROOT=`dirname $0`
@@ -19,6 +20,18 @@ DIR=`mktemp -d`
 
 OUT=`readlink -f $OUT`
 mkdir -p $OUT
+
+NEED_RUN=0
+for bench in $BENCHES; do
+  if [ ! -f $OUT/complete.$bench ]; then
+    NEED_RUN=1
+    break
+  fi
+done
+
+if [ $NEED_RUN -eq 0 ]; then
+  exit 0
+fi
 
 cd $DIR
 git init wasmtime
