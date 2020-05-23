@@ -54,9 +54,9 @@ ensure_binaries() {
 }
 
 get_icount() {
-  OUT=$1
+  outfile=$1
   shift
-  valgrind --tool=cachegrind --cache-sim=no --cachegrind-out-file=$OUT "$@"
+  valgrind --tool=cachegrind --cache-sim=no --cachegrind-out-file=$outfile "$@"
 }
 
 do_runs() {
