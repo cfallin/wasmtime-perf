@@ -16,9 +16,9 @@ ROOT=`dirname $0`
 ROOT=`readlink -f $ROOT`
 BINS=$ROOT/binaries
 mkdir -p $BINS
+HASH=$1
 WTBIN=$BINS/wasmtime.$HASH
 CLBIN=$BINS/clif-util.$HASH
-HASH=$1
 OUT=$ROOT/data/out.$HASH
 mkdir -p $OUT
 OUT=`readlink -f $OUT`
@@ -56,7 +56,7 @@ ensure_binaries() {
 get_icount() {
   OUT=$1
   shift
-  valgrind --tool=cachegrind --cache-sim=no --vex-chase-guest=no --cachegrind-out-file=$OUT "$@"
+  valgrind --tool=cachegrind --cache-sim=no --cachegrind-out-file=$OUT "$@"
 }
 
 do_runs() {
@@ -69,22 +69,26 @@ do_runs() {
     rm -f $OUT/compile.$bench.*
     rm -f $OUT/compile-run.$bench.*
 
+    FAIL=0
+
     for i in `seq 0 9`; do
       echo "Run $i: $bench: compile time"
       rm -f $OUT/compile.$bench.$i.cachegrind
       get_icount $OUT/compile.$bench.$i.cachegrind \
            $CLBIN wasm --set opt_level=speed --set enable_verifier=false --target aarch64 \
-           $ROOT/$bench.wasm
+           $ROOT/$bench.wasm || FAIL=1
     done
 
     for i in `seq 0 9`; do
       echo "Run $i: $bench: compile time + runtime "
       rm -f $OUT/compile-run.$bench.$i.cachegrind
       get_icount $OUT/compile-run.$bench.$i.cachegrind \
-           $WTBIN run --disable-cache $ROOT/$bench.wasm
+           $WTBIN run --disable-cache $ROOT/$bench.wasm || FAIL=1
     done
 
-    touch $OUT/complete.$bench
+    if [ $FAIL -eq 0 ]; then
+      touch $OUT/complete.$bench
+    fi
   done
 
   echo "Results in $OUT"
