@@ -14,66 +14,91 @@ fi
 
 ROOT=`dirname $0`
 ROOT=`readlink -f $ROOT`
+BINS=$ROOT/binaries
+mkdir -p $BINS
+WTBIN=$BINS/wasmtime.$HASH
+CLBIN=$BINS/clif-util.$HASH
 HASH=$1
 OUT=$ROOT/data/out.$HASH
-DIR=`mktemp -d`
-
-OUT=`readlink -f $OUT`
 mkdir -p $OUT
+OUT=`readlink -f $OUT`
 
-NEED_RUN=0
-for bench in $BENCHES; do
-  if [ ! -f $OUT/complete.$bench ]; then
-    NEED_RUN=1
-    break
-  fi
-done
-
-if [ $NEED_RUN -eq 0 ]; then
-  exit 0
-fi
-
-cd $DIR
-git init wasmtime
-cd wasmtime/
-git fetch --depth 1 $REPO $HASH:eval
-git checkout eval
-git submodule update --init --depth 1
-
-echo "Checked out in `pwd`..."
-
-cargo build -p cranelift-tools --release && cargo build --release
-
-export RAYON_NUM_THREADS=1
-
-for bench in $BENCHES; do
-  if [ -f $OUT/complete.$bench ]; then
-    continue
-  fi
-  rm -f $OUT/compile.$bench.*
-  rm -f $OUT/compile-run.$bench.*
-
-  for i in `seq 0 9`; do
-    echo "Run $i: $bench: compile time"
-    if ! perf stat \
-         target/release/clif-util wasm --set opt_level=speed --set enable_verifier=false --target aarch64 \
-         $ROOT/$bench.wasm 2>$OUT/compile.$bench.$i.txt; then
-      rm $OUT/compile.$bench.$i.txt
+need_run() {
+  for bench in $BENCHES; do
+    if [ ! -f $OUT/complete.$bench ]; then
+      echo 1
+      return
     fi
   done
+  echo 0
+}
 
-  for i in `seq 0 9`; do
-    echo "Run $i: $bench: compile time + runtime "
-    if ! perf stat \
-         target/release/wasmtime run --disable-cache \
-         $ROOT/$bench.wasm 2>$OUT/compile-run.$bench.$i.txt; then
-      rm $OUT/compile-run.$bench.$i.txt
+ensure_binaries() {
+  if [ ! -x $WTBIN ] || [ ! -x $CLBIN ]; then
+    DIR=`mktemp -d`
+    pushd $DIR
+    git init wasmtime
+    cd wasmtime/
+    git fetch --depth 1 $REPO $HASH:eval
+    git checkout eval
+    git submodule update --init --depth 1
+
+    echo "Checked out in `pwd`..."
+
+    cargo build -p cranelift-tools --release && cargo build --release
+    cp target/release/clif-util $CLBIN
+    cp target/release/wasmtime $WTBIN
+    popd
+    rm -rf $DIR
+  fi
+}
+
+get_icount() {
+  OUT=$1
+  shift
+  valgrind --tool=cachegrind --cache-sim=no --vex-chase-guest=no --cachegrind-out-file=$OUT "$@"
+}
+
+do_runs() {
+  export RAYON_NUM_THREADS=1
+
+  for bench in $BENCHES; do
+    if [ -f $OUT/complete.$bench ]; then
+      continue
     fi
+    rm -f $OUT/compile.$bench.*
+    rm -f $OUT/compile-run.$bench.*
+
+    for i in `seq 0 9`; do
+      echo "Run $i: $bench: compile time"
+      rm -f $OUT/compile.$bench.$i.cachegrind
+      get_icount $OUT/compile.$bench.$i.cachegrind \
+           $CLBIN wasm --set opt_level=speed --set enable_verifier=false --target aarch64 \
+           $ROOT/$bench.wasm
+    done
+
+    for i in `seq 0 9`; do
+      echo "Run $i: $bench: compile time + runtime "
+      rm -f $OUT/compile-run.$bench.$i.cachegrind
+      get_icount $OUT/compile-run.$bench.$i.cachegrind \
+           $WTBIN run --disable-cache $ROOT/$bench.wasm
+    done
+
+    touch $OUT/complete.$bench
   done
 
-  touch $OUT/complete.$bench
-done
+  echo "Results in $OUT"
+}
 
-echo "Results in $OUT"
+main() {
+  if ! need_run; then
+    exit 0
+  fi
 
-rm -rf $DIR
+  ensure_binaries
+  do_runs
+}
+
+main
+
+
