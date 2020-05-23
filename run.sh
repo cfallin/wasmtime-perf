@@ -71,7 +71,7 @@ do_runs() {
 
     FAIL=0
 
-    for i in `seq 0 9`; do
+    for i in 0; do
       echo "Run $i: $bench: compile time"
       rm -f $OUT/compile.$bench.$i.cachegrind
       get_icount $OUT/compile.$bench.$i.cachegrind \
@@ -79,7 +79,7 @@ do_runs() {
            $ROOT/$bench.wasm || FAIL=1
     done
 
-    for i in `seq 0 9`; do
+    for i in 0; do
       echo "Run $i: $bench: compile time + runtime "
       rm -f $OUT/compile-run.$bench.$i.cachegrind
       get_icount $OUT/compile-run.$bench.$i.cachegrind \
