@@ -34,7 +34,8 @@ need_run() {
 }
 
 ensure_binaries() {
-  if [ ! -x $WTBIN ] || [ ! -x $CLBIN ]; then
+#  if [ ! -x $WTBIN ] || [ ! -x $CLBIN ]; then
+  if [ ! -x $CLBIN ]; then
     DIR=`mktemp -d`
     pushd $DIR
     git init wasmtime
@@ -45,9 +46,10 @@ ensure_binaries() {
 
     echo "Checked out in `pwd`..."
 
-    cargo build -p cranelift-tools --release && cargo build --release
+#    cargo build -p cranelift-tools --release && cargo build --release
+    cargo build -p cranelift-tools --release
     cp target/release/clif-util $CLBIN
-    cp target/release/wasmtime $WTBIN
+#    cp target/release/wasmtime $WTBIN
     popd
     rm -rf $DIR
   fi
@@ -79,12 +81,12 @@ do_runs() {
            $ROOT/$bench.wasm || FAIL=1
     done
 
-    for i in 0; do
-      echo "Run $i: $bench: compile time + runtime "
-      rm -f $OUT/compile-run.$bench.$i.cachegrind
-      get_icount $OUT/compile-run.$bench.$i.cachegrind \
-           $WTBIN run --disable-cache $ROOT/$bench.wasm || FAIL=1
-    done
+#    for i in 0; do
+#      echo "Run $i: $bench: compile time + runtime "
+#      rm -f $OUT/compile-run.$bench.$i.cachegrind
+#      get_icount $OUT/compile-run.$bench.$i.cachegrind \
+#           $WTBIN run --disable-cache $ROOT/$bench.wasm || FAIL=1
+#    done
 
     if [ $FAIL -eq 0 ]; then
       touch $OUT/complete.$bench
