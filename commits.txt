@@ -12,5 +12,4 @@ ee2f861fdda3903588573b9dbbf658eec2a949bd avoid duplicate RRU allocs
 94190d57244b26baf36629c88104b0ba516510cf tune CLIF parser: use SmallVec
 07c55fa50f214258817ec924a79404370a8321c8 suggest a scratch register that's not caller-saved
 df4028749e53d0da258a5e6c5d3779414440130b reduce Inst size (Joey's patch)
-d8d6fbe58c41e33477fd21df954ab87d864c16c0 isel refactor / MachBuffer / block ordering (incorrect on bz2)
-c9e3b71c39430fa4f5f216a32d8e6492cbf34a5c fix MachBuffer bug
+c9e3b71c39430fa4f5f216a32d8e6492cbf34a5c isel refactor / MachBuffer / block ordering (fixed)

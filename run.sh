@@ -14,6 +14,7 @@ fi
 
 ROOT=`dirname $0`
 ROOT=`readlink -f $ROOT`
+WASMS=$ROOT/wasm-tests
 BINS=$ROOT/binaries
 mkdir -p $BINS
 HASH=$1
@@ -78,7 +79,7 @@ do_runs() {
       rm -f $OUT/compile.$bench.$i.cachegrind
       get_icount $OUT/compile.$bench.$i.cachegrind \
            $CLBIN wasm --set opt_level=speed --set enable_verifier=false --target aarch64 \
-           $ROOT/$bench.wasm || FAIL=1
+           $WASMS/$bench.wasm || FAIL=1
     done
 
 #    for i in 0; do
